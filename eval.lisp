@@ -4,7 +4,7 @@
 (defparameter max-val                2)
 (defparameter mutate-arg           0.1)
 (defparameter mutate-num           0.6)
-(defparameter mutate-fun           0.1)
+(defparameter mutate-fun           0.2)
  
 (defun mutate-min (&optional (x))
   (declare (ignore x))              -1)
@@ -38,7 +38,9 @@
   #(x))
 (defparameter args-list
   (coerce args 'list))
- 
+(defparameter gens-number (length gens))
+(defparameter args-number (length args))
+
 (defun flatten (l)
   (error "flatten")
   (cond ((null l) nil)
@@ -98,9 +100,6 @@
 (defun simplify (arg)
   (handler-case (simplify-routine arg)
     (error (e) (declare (ignore e)) exception-weight)))
- 
-(defparameter gens-number (length gens))
-(defparameter args-number (length args))
  
 (defparameter target-fun
   (eval `(lambda (x) (+ (* x 1.46327) (/ x 0.3423)))))
@@ -165,11 +164,14 @@
          ,sast))
     (eval `(lambda ,sarg ,sast)))))
  
-(defun generate-values (fun)
-  (loop for x from fitness-min to fitness-max by fitness-step
-     collect (handler-case
-         (funcall fun x)
-           (error (e) (declare (ignore e)) exception-weight))))
+(defun generate-values (arg)
+  (let ((fun (if (listp arg)
+		 (eval `(lambda ,args-list ,(simplify arg)))
+		 arg)))
+    (loop for x from fitness-min to fitness-max by fitness-step
+       collect (handler-case
+		   (funcall fun x)
+		 (error (e) (declare (ignore e)) exception-weight)))))
 
 (defun fitness-compare (f1 f2)
   (let ((f1-data (generate-values f1))
@@ -186,29 +188,23 @@
 	  (coerce
 	   (loop for x below population-size collect
 		(let* ((fun (gen-fun d))
-		       (sfun (simplify fun))
-		       (f-data (generate-values
-				(eval `(lambda ,args-list ,sfun)))))
-		  (cons fun (compare-data values f-data))))
+		       (fun-values (generate-values fun)))
+		  (cons fun (compare-data values fun-values))))
 	   'vector)))
     (loop for n below iterations do
 	 (sort population #'< :key #'cdr)
 	 (loop for i below individuals-survive do
 	      (let* ((mut-fun (mutate (car (aref population i)) d))
-		     (sfun (simplify mut-fun))
-		     (mut-d (generate-values
-			     (eval `(lambda ,args-list ,sfun))))
-		     (result (compare-data values mut-d)))
+		     (mut-values (generate-values mut-fun))
+		     (result (compare-data values mut-values)))
 		(when (< result (cdr (aref population i)))
 		  (setf (aref population i)
 			(cons mut-fun result)))))
 	 (loop for i from individuals-survive below population-size do
 	      (setf (aref population i)
 		    (let* ((fun (gen-fun d))
-			   (sfun (simplify fun))
-			   (f-data (generate-values
-				    (eval `(lambda ,args-list ,sfun)))))
-		      (cons fun (compare-data values f-data)))))
+			   (fun-values (generate-values fun)))
+		      (cons fun (compare-data values fun-values)))))
 	 (when (= 0 (rem n 100)) (format t "Iteration ~A...~%" n)))
     (declaim (sb-ext:unmuffle-conditions cl:style-warning))
     population))
