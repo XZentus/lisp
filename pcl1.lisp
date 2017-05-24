@@ -29,3 +29,34 @@
   (with-open-file (out filename :direction :output :if-exists :supersede)
     (with-standard-io-syntax
 	(print *db* out))))
+
+(defun load-db (filename)
+  (with-open-file (in filename)
+    (with-standard-io-syntax
+      (setf *db* (read in)))))
+
+(defun delete-rows (selector)
+  (setf *db* (remove-if selector *db*)))
+
+(defun make-comparsion-expr (field value)
+  `(equal (getf cd ,field) ,value))
+
+(defun make-comparsion-list (fields)
+  (loop while fields
+       collecting (make-comparsion-expr (pop fields) (pop fields))))
+
+(defun select (selector)
+  (remove-if-not selector *db*))
+
+(defmacro where (&rest clauses)
+  `(lambda (cd) (and ,@(make-comparsion-list clauses))))
+
+(defun update (selector &key title artist rating (ripped nil ripped-p))
+  (setf *db*
+	(mapcar (lambda (row)
+		  (when (funcall selector row)
+		    (if title    (setf (getf row :title)  title))
+		    (if artist   (setf (getf row :artist) title))
+		    (if rating   (setf (getf row :rating) rating))
+		    (if ripped-p (setf (getf row :ripped) ripped)))
+		  row) *db*)))
