@@ -1,10 +1,13 @@
-(ql:quickload :dexador)
-
 (defparameter token-url "https://service.nalog.ru/static/captcha.html")
 (defparameter tmp-file "d:/src/lisp/tmp.gif")
+(defparameter *cookie-jar* (cl-cookie:make-cookie-jar))
 
-(defparameter current-token (dex:get token-url))
-(defparameter captcha-picture (dex:get (concatenate 'string token-url "?a=" current-token)))
+(dex:head "https://service.nalog.ru/inn.do" :cookie-jar *cookie-jar*)
+
+(defparameter current-token (dex:get token-url :cookie-jar *cookie-jar*))
+(defparameter captcha-picture (dex:get
+			       (concatenate 'string token-url "?a=" current-token)
+			       :cookie-jar *cookie-jar*))
 
 (with-open-file (out tmp-file
 		     :direction :output
@@ -16,6 +19,7 @@
 (defparameter captcha-result (read-line))
 
 (defparameter ans (dex:post "https://service.nalog.ru/inn-proc.do"
+			    :cookie-jar *cookie-jar*
 			    :content '(("c" . "innMy")
 				       ("fam" . "test")
 				       ("nam" . "test")
