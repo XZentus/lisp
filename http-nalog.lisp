@@ -6,6 +6,7 @@
 (defvar *cookie-jar* (cl-cookie:make-cookie-jar))
 
 (defvar *main-url* "https://service.nalog.ru/inn.do")
+(defvar *request-url* "https://service.nalog.ru/inn-proc.do")
 
 (defvar current-token)
 
@@ -16,7 +17,8 @@
 
 (defparameter captcha-picture (dex:get
 			       (concatenate 'string token-url
-					    "?a=" current-token)
+					    (format nil "?r=~A" (javascript-time))
+					    "&a=" current-token)
 			       :cookie-jar *cookie-jar*))
 
 (with-open-file (out tmp-file
@@ -29,17 +31,16 @@
 (asdf:run-shell-command tmp-file)
 (defparameter captcha-result (read-line))
 
-(defparameter ans (dex:post "https://service.nalog.ru/inn-proc.do"
+(defparameter ans (dex:post *request-url*
 			    :cookie-jar *cookie-jar*
 			    :content '(("c" . "innMy")
-				       ("fam" . "тест")
-				       ("nam" . "тест")
-				       ("otch" . "тест")
-				       ("bdate" . "11.11.1111")
+				       ("fam" . "Погоня")
+				       ("nam" . "Андрей")
+				       ("otch" . "Алексеевич")
+				       ("bdate" . "23.04.1991")
 				       ("bplace" . "")
 				       ("doctype" . "21")
-				       ("docno" . "11 11 111111")
-				       ("docdt" . "11.11.1111")
+				       ("docno" . "87 11 477429")
+				       ("docdt" . "03.05.2011")
 				       ("captcha" . captcha-result)
-				       ("captchaToken" . current-token))))
-
+				       ("captchaToken" . captcha-token))))
