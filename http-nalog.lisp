@@ -90,7 +90,7 @@
 						      ("docdt" . ,(person-passp-date p))
 						      ("captcha" . ,(car captcha-result))
 						      ("captchaToken" . ,(cdr captcha-result))))))
-		       (list (ppcre:scan-to-strings "\\d{12,12}" ans))))
+		       (list (ppcre:scan-to-strings "\\d{12}" ans))))
 		    (t (list "Недостаточно данных для запроса"))))))
 
 (loop for x in *results* do
