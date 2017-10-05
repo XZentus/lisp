@@ -45,7 +45,7 @@
 
 (defun read-captcha (cookies)
   (let* ((captcha-token (dex:get
-			 (concatenate 'string token-url "?r=" time-string)
+			 (concatenate 'string token-url "?r=" (format nil "?r=~A" (javascript-time)))
 			 :cookie-jar cookies))
 	 (captcha-picture (dex:get (concatenate 'string
 						token-url
