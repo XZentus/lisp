@@ -6,7 +6,7 @@
 (defvar tmp-file "d:/src/lisp/tmp.gif")
 (defvar *main-url* "https://service.nalog.ru/inn.do")
 (defvar *request-url* "https://service.nalog.ru/inn-proc.do")
-(defparameter *cookie-jar* (cl-cookie:make-cookie-jar))
+(defvar *cookie-jar* (cl-cookie:make-cookie-jar))
 
 (defstruct person
   surname
@@ -16,8 +16,8 @@
   passp-sn
   passp-date)
 
-(defvar regex-pattern
-  "(\\w*)\\t(\\w*)\\t(\\w*)\\t(\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d)\\t(\\d{2,2}\\s\\d{2,2}\\s\\d{6,6})\\t(\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d)")
+(defparameter regex-pattern
+  "(\\w*)\\t(\\w*)\\t(\\w*)\\t(\\d{2}\\.\\d{2}\\.\\d{4})\\t(\\d{2}\\s\\d{2}\\s\\d{6})\\t(\\d{2}\\.\\d{2}\\.\\d{4})")
 
 (defparameter *data* ())
 
