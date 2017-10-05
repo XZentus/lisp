@@ -1,5 +1,6 @@
 (ql:quickload :cl-ppcre)
 (ql:quickload :dexador)
+(ql:quickload :com.gigamonkeys.utilities)
 
 (defvar token-url "https://service.nalog.ru/static/captcha.html")
 (defvar tmp-file "d:/src/lisp/tmp.gif")
@@ -45,11 +46,14 @@
 
 (defun read-captcha (cookies)
   (let* ((captcha-token (dex:get
-			 (concatenate 'string token-url "?r=" (format nil "?r=~A" (javascript-time)))
+			 (concatenate 'string token-url
+				      "?r=" (format nil "?r=~A"
+						    (com.gigamonkeys.utilities::javascript-time)))
 			 :cookie-jar cookies))
 	 (captcha-picture (dex:get (concatenate 'string
 						token-url
-						(format nil "?r=~A" (javascript-time))
+						(format nil "?r=~A"
+							(com.gigamonkeys.utilities::javascript-time))
 						"&a=" captcha-token)
 				   :cookie-jar cookies))
 	 (result (progn
@@ -89,3 +93,4 @@
 
 (loop for x in *results* do
      (format t "~A~%" x))
+
