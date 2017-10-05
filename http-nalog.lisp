@@ -25,6 +25,7 @@
     ((string= line ""))
   (multiple-value-bind (_ parsed-data)
       (ppcre:scan-to-strings regex-pattern line)
+    (declare (ignore _))
     (setf *data*
 	  (if parsed-data
 	      (nconc *data* (list (make-person :surname (aref parsed-data 0)
@@ -40,6 +41,7 @@
 (multiple-value-bind (_ token)
     (ppcre:scan-to-strings "name=\"captchaToken\" value=\"([0-9A-Z]+)\"" 
 			   (dex:get *main-url* :cookie-jar *cookie-jar*))
+  (declare (ignore _))
   (setf current-token (aref token 0)))
 
 (defparameter *results* ())
