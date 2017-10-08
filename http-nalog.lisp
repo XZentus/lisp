@@ -47,17 +47,19 @@
 (defparameter *results* ())
 
 (defun read-captcha (cookies)
-  (let* ((captcha-token (dex:get
-			 (concatenate 'string token-url
-				      "?r=" (format nil "?r=~A"
-						    (com.gigamonkeys.utilities::javascript-time)))
-			 :cookie-jar cookies))
-	 (captcha-picture (dex:get (concatenate 'string
-						token-url
-						(format nil "?r=~A"
-							(com.gigamonkeys.utilities::javascript-time))
-						"&a=" captcha-token)
-				   :cookie-jar cookies))
+  (let* ((captcha-token
+	  (dex:get
+	   (concatenate 'string token-url
+			"?r=" (format nil "?r=~A"
+				      (com.gigamonkeys.utilities::javascript-time)))
+	   :cookie-jar cookies))
+	 (captcha-picture
+	  (dex:get (concatenate 'string
+				token-url
+				(format nil "?r=~A"
+					(com.gigamonkeys.utilities::javascript-time))
+				"&a=" captcha-token)
+		   :cookie-jar cookies))
 	 (result (progn
 		   (with-open-file (out tmp-file
 					:direction :output
@@ -71,28 +73,32 @@
 	(read-captcha cookies)
 	(cons result captcha-token))))
 
+(defun make-request (p cookies)
+  (handler-case
+      (let* ((captcha-result (read-captcha cookies))
+	     (ans (dex:post *request-url*
+			    :cookie-jar cookies
+			    :content `(("c" . "innMy")
+				       ("fam" . ,(person-surname p))
+				       ("nam" . ,(person-name p))
+				       ("otch" . ,(person-patronymic p))
+				       ("bdate" . ,(person-birth-date p))
+				       ("bplace" . "")
+				       ("doctype" . "21")
+				       ("docno" . ,(person-passp-sn p))
+				       ("docdt" . ,(person-passp-date p))
+				       ("captcha" . ,(car captcha-result))
+				       ("captchaToken" . ,(cdr captcha-result))))))
+	(list (ppcre:scan-to-strings "\\d{12}" ans)))
+    (error (arg) (format t "Error: ~A~%" arg)
+	   (make-request p cookies))))
+
 (loop for p in *data* do
      (setf *results*
 	   (nconc *results*
 		  (cond
-		    ((person-p p)
-		     (let* ((captcha-result (read-captcha *cookie-jar*))
-			    (ans (dex:post *request-url*
-					   :cookie-jar *cookie-jar*
-					   :content `(("c" . "innMy")
-						      ("fam" . ,(person-surname p))
-						      ("nam" . ,(person-name p))
-						      ("otch" . ,(person-patronymic p))
-						      ("bdate" . ,(person-birth-date p))
-						      ("bplace" . "")
-						      ("doctype" . "21")
-						      ("docno" . ,(person-passp-sn p))
-						      ("docdt" . ,(person-passp-date p))
-						      ("captcha" . ,(car captcha-result))
-						      ("captchaToken" . ,(cdr captcha-result))))))
-		       (list (ppcre:scan-to-strings "\\d{12}" ans))))
+		    ((person-p p) (make-request p *cookie-jar*))
 		    (t (list "Недостаточно данных для запроса"))))))
 
 (loop for x in *results* do
      (format t "~A~%" x))
-
