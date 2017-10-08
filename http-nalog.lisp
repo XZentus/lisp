@@ -90,8 +90,10 @@
 				       ("captcha" . ,(car captcha-result))
 				       ("captchaToken" . ,(cdr captcha-result))))))
 	(list (ppcre:scan-to-strings "\\d{12}" ans)))
-    (error (arg) (format t "Error: ~A~%" arg)
-	   (make-request p cookies))))
+    (error (x)
+      (declare (ignore x))
+      (format t "Error~%")
+      (make-request p cookies))))
 
 (loop for p in *data* do
      (setf *results*
