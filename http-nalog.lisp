@@ -3,7 +3,7 @@
 (ql:quickload :com.gigamonkeys.utilities)
 
 (defvar token-url "https://service.nalog.ru/static/captcha.html")
-(defvar tmp-file "d:/src/lisp/tmp.gif")
+(defvar tmp-file "tmp.gif")
 (defvar *main-url* "https://service.nalog.ru/inn.do")
 (defvar *request-url* "https://service.nalog.ru/inn-proc.do")
 (defvar *cookie-jar* (cl-cookie:make-cookie-jar))
@@ -94,7 +94,6 @@
 					 ("docdt" . ,(person-passp-date p))
 					 ("captcha" . ,(car captcha-result))
 					 ("captchaToken" . ,(cdr captcha-result))))))
-		  (ppcre:scan-to-strings "\\d{12}" ans))
 	  (setf inn (ppcre:scan-to-strings "\\d{12}" ans)))
       (error (x)
 	(format t "Error: ~A~%" x)
