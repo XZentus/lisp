@@ -20,30 +20,7 @@
   "(\\w*)\\t(\\w*)\\t(\\w*)\\t(\\d{2}\\.\\d{2}\\.\\d{4})\\t(\\d{2}\\s\\d{2}\\s\\d{6})\\t(\\d{2}\\.\\d{2}\\.\\d{4})")
 
 (defparameter *data* ())
-
-(do ((line (read-line) (read-line)))
-    ((string= line ""))
-  (multiple-value-bind (_ parsed-data)
-      (ppcre:scan-to-strings regex-pattern line)
-    (declare (ignore _))
-    (setf *data*
-	  (if parsed-data
-	      (nconc *data* (list (make-person :surname (aref parsed-data 0)
-					       :name (aref parsed-data 1)
-					       :patronymic (aref parsed-data 2)
-					       :birth-date (aref parsed-data 3)
-					       :passp-sn (aref parsed-data 4)
-					       :passp-date (aref parsed-data 5))))
-	      (nconc *data* (list line))))))
-
 (defparameter current-token ())
-
-(multiple-value-bind (_ token)
-    (ppcre:scan-to-strings "name=\"captchaToken\" value=\"([0-9A-Z]+)\"" 
-			   (dex:get *main-url* :cookie-jar *cookie-jar*))
-  (declare (ignore _))
-  (setf current-token (aref token 0)))
-
 (defparameter *results* ())
 
 (defun read-captcha (cookies)
@@ -99,12 +76,41 @@
 	(format t "Error: ~A~%" x)
 	(setf inn 'error)))))
 
-(loop for p in *data* do
-     (setf *results*
-	   (nconc *results*
-		  (cond
-		    ((person-p p) (make-request p *cookie-jar*))
-		    (t (list "Недостаточно данных для запроса"))))))
+(defun main ()
+  (setf *data* ())
+  (setf current-token ())
+  (setf *results* ())
+  (format t "INPUT:~%")
 
-(loop for x in *results* do
-     (format t "~A~%" x))
+  (do ((line (read-line) (read-line)))
+      ((string= line ""))
+    (multiple-value-bind (_ parsed-data)
+	(ppcre:scan-to-strings regex-pattern line)
+      (declare (ignore _))
+      (setf *data*
+	    (if parsed-data
+		(nconc *data* (list (make-person :surname (aref parsed-data 0)
+						 :name (aref parsed-data 1)
+						 :patronymic (aref parsed-data 2)
+						 :birth-date (aref parsed-data 3)
+						 :passp-sn (aref parsed-data 4)
+						 :passp-date (aref parsed-data 5))))
+		(nconc *data* (list line))))))
+  (format t "WORKING...~%")
+
+  (multiple-value-bind (_ token)
+      (ppcre:scan-to-strings "name=\"captchaToken\" value=\"([0-9A-Z]+)\"" 
+			     (dex:get *main-url* :cookie-jar *cookie-jar*))
+    (declare (ignore _))
+    (setf current-token (aref token 0)))
+
+  (loop for p in *data* do
+       (setf *results*
+	     (nconc *results*
+		    (cond
+		      ((person-p p) (make-request p *cookie-jar*))
+		      (t (list "Недостаточно данных для запроса"))))))
+  (format t "RESULTS:~%")
+
+  (loop for x in *results* do
+       (format t "~A~%" x)))
