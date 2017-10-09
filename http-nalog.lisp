@@ -74,26 +74,31 @@
 	(cons result captcha-token))))
 
 (defun make-request (p cookies)
-  (handler-case
-      (let* ((captcha-result (read-captcha cookies))
-	     (ans (dex:post *request-url*
-			    :cookie-jar cookies
-			    :content `(("c" . "innMy")
-				       ("fam" . ,(person-surname p))
-				       ("nam" . ,(person-name p))
-				       ("otch" . ,(person-patronymic p))
-				       ("bdate" . ,(person-birth-date p))
-				       ("bplace" . "")
-				       ("doctype" . "21")
-				       ("docno" . ,(person-passp-sn p))
-				       ("docdt" . ,(person-passp-date p))
-				       ("captcha" . ,(car captcha-result))
-				       ("captchaToken" . ,(cdr captcha-result))))))
-	(list (ppcre:scan-to-strings "\\d{12}" ans)))
-    (error (x)
-      (declare (ignore x))
-      (format t "Error~%")
-      (make-request p cookies))))
+  (do ((inn 'error))
+      ((not (eql inn 'error)) (list inn))
+    (handler-case
+	(let* ((captcha-result
+		(progn
+		  (format t "Person: ~A~%Captcha: " p)
+		  (read-captcha cookies)))
+	       (ans (dex:post *request-url*
+			      :cookie-jar cookies
+			      :content `(("c" . "innMy")
+					 ("fam" . ,(person-surname p))
+					 ("nam" . ,(person-name p))
+					 ("otch" . ,(person-patronymic p))
+					 ("bdate" . ,(person-birth-date p))
+					 ("bplace" . "")
+					 ("doctype" . "21")
+					 ("docno" . ,(person-passp-sn p))
+					 ("docdt" . ,(person-passp-date p))
+					 ("captcha" . ,(car captcha-result))
+					 ("captchaToken" . ,(cdr captcha-result))))))
+		  (ppcre:scan-to-strings "\\d{12}" ans))
+	  (setf inn (ppcre:scan-to-strings "\\d{12}" ans)))
+      (error (x)
+	(format t "Error: ~A~%" x)
+	(setf inn 'error)))))
 
 (loop for p in *data* do
      (setf *results*
