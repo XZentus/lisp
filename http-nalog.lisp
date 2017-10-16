@@ -17,7 +17,7 @@
   passp-date)
 
 (defparameter regex-pattern
-  "(\\w*)\\t(\\w*)\\t(\\w*)\\t(\\d{2}\\.\\d{2}\\.\\d{4})\\t(\\d{2}\\s\\d{2}\\s\\d{6})\\t(\\d{2}\\.\\d{2}\\.\\d{4})")
+  "(\\w*)\\s+(\\w*)\\s+(\\w*)\\s+(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(\\d{2})\\s*(\\d{2})\\s*(\\d{6})\\s+(\\d{2}\\.\\d{2}\\.\\d{4})")
 
 (defparameter *data* ())
 (defparameter current-token ())
@@ -76,12 +76,12 @@
 	(format t "Error: ~A~%" x)
 	(setf inn 'error)))))
 
-(defun main ()
-  (setf *data* ())
-  (setf current-token ())
-  (setf *results* ())
-  (format t "INPUT:~%")
+(defun read-command ()
+  (princ "Command: ")
+  (read))
 
+(defun read-data ()
+  (format t "INPUT:~%")
   (do ((line (read-line) (read-line)))
       ((string= line ""))
     (multiple-value-bind (_ parsed-data)
@@ -93,9 +93,16 @@
 						 :name (aref parsed-data 1)
 						 :patronymic (aref parsed-data 2)
 						 :birth-date (aref parsed-data 3)
-						 :passp-sn (aref parsed-data 4)
-						 :passp-date (aref parsed-data 5))))
-		(nconc *data* (list line))))))
+						 :passp-sn (format nil "~A ~A ~A"
+								   (aref parsed-data 4)
+								   (aref parsed-data 5)
+								   (aref parsed-data 6))
+						 :passp-date (aref parsed-data 7))))
+		(nconc *data* (list line)))))))
+
+(defun routine ()
+  (setf current-token ())
+  (setf *results* ())
   (format t "WORKING...~%")
 
   (multiple-value-bind (_ token)
@@ -109,8 +116,33 @@
 	     (nconc *results*
 		    (cond
 		      ((person-p p) (make-request p *cookie-jar*))
-		      (t (list "Недостаточно данных для запроса"))))))
-  (format t "RESULTS:~%")
+		      (t (list "Недостаточно данных для запроса")))))))
 
+(defun show-results ()
+  (format t "RESULTS:~%")
   (loop for x in *results* do
        (format t "~A~%" x)))
+
+(defun main ()
+  (do ((command (read-command) (read-command)))
+      ((or (eq command 'end)
+	   (eq command 'q)
+	   (eq command 'quit))
+       (format t "End~%"))
+    (cond
+      ((or (eq command 'd) (eq command 'data))
+       (format t "~A~%" *data*))
+      ((or (eq command 's) (eq command 'show))
+       (show-results))
+      ((or (eq command 'i) (eq command 'input))
+       (setf *data* ())
+       (read-data))
+      ((or (eq command 'a) (eq command 'append))
+       (read-data))
+      ((or (eq command 'c) (eq command 'check))
+       (routine))
+      ((or (eq command 'r) (eq command 'run))
+       (setf *data* ())
+       (read-data)
+       (routine)
+       (show-results)))))
