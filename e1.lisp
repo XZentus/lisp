@@ -1,0 +1,6 @@
+(let* ((lim-min 1)
+       (lim-max 1000)
+       (sum-3 (loop for x from (+ lim-min (- 3 (mod lim-min 3))) below lim-max by 3 sum x))
+       (sum-5 (loop for x from (+ lim-min (- 5 (mod lim-min 5))) below lim-max by 5 sum x))
+       (sum-15 (loop for x from (+ lim-min (- 15 (mod lim-min 15))) below lim-max by 15 sum x)))
+  (print (+ sum-3 sum-5 (- sum-15))))
