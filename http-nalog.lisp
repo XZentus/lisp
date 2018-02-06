@@ -44,7 +44,8 @@
 					:if-does-not-exist :create
 					:element-type 'unsigned-byte)
 		     (write-sequence captcha-picture out))
-		   (asdf:run-shell-command tmp-file)
+					;(asdf:run-shell-command tmp-file)
+		   (uiop:run-program tmp-file :ignore-error-status t)
 		   (read-line))))
     (if (string= result "")
 	(read-captcha cookies)
