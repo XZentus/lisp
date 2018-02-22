@@ -16,6 +16,14 @@
   passp-sn
   passp-date)
 
+(defmethod print-object ((p person)
+                         (s stream))
+  (format s "~A ~A ~A ~A"
+          (person-surname p)
+          (person-name p)
+          (person-patronymic p)
+          (person-birth-date p)))
+
 (defparameter regex-pattern
   "(\\w*)\\s+(\\w*)\\s+(\\w*)\\s+(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(\\d{2})\\s*(\\d{2})\\s*(\\d{6})\\s+(\\d{2}\\.\\d{2}\\.\\d{4})")
 
