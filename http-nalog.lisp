@@ -1,6 +1,7 @@
+
 (ql:quickload :cl-ppcre)
 (ql:quickload :dexador)
-(ql:quickload :com.gigamonkeys.utilities)
+;(ql:quickload :com.gigamonkeys.utilities)
 
 (defvar token-url "https://service.nalog.ru/static/captcha.html")
 (defvar tmp-file "tmp.gif")
@@ -23,33 +24,33 @@
 (defparameter current-token ())
 (defparameter *results* ())
 
+(defun js-time-approx ()
+  (* 407 (get-universal-time)))
+
 (defun read-captcha (cookies)
   (let* ((captcha-token
-	  (dex:get
-	   (concatenate 'string token-url
-			"?r=" (format nil "?r=~A"
-				      (com.gigamonkeys.utilities::javascript-time)))
-	   :cookie-jar cookies))
-	 (captcha-picture
-	  (dex:get (concatenate 'string
-				token-url
-				(format nil "?r=~A"
-					(com.gigamonkeys.utilities::javascript-time))
-				"&a=" captcha-token)
-		   :cookie-jar cookies))
-	 (result (progn
-		   (with-open-file (out tmp-file
-					:direction :output
-					:if-exists :supersede
-					:if-does-not-exist :create
-					:element-type 'unsigned-byte)
-		     (write-sequence captcha-picture out))
-					;(asdf:run-shell-command tmp-file)
-		   (uiop:run-program tmp-file :ignore-error-status t)
-		   (read-line))))
+           (dex:get
+            (concatenate 'string token-url
+                         "?r=" (format nil "?r=~A" (js-time-approx)))
+            :cookie-jar cookies))
+         (captcha-picture
+           (dex:get (concatenate 'string
+                                 token-url
+                                 (format nil "?r=~A" (js-time-approx))
+                                 "&a=" captcha-token)
+                    :cookie-jar cookies))
+         (result (progn
+                   (with-open-file (out tmp-file
+                                        :direction :output
+                                        :if-exists :supersede
+                                        :if-does-not-exist :create
+                                        :element-type 'unsigned-byte)
+                     (write-sequence captcha-picture out))
+                   (uiop:run-program tmp-file :ignore-error-status t)
+                   (read-line))))
     (if (string= result "")
-	(read-captcha cookies)
-	(cons result captcha-token))))
+        (read-captcha cookies)
+        (cons result captcha-token))))
 
 (defun make-request (p cookies)
   (do ((inn 'error))
