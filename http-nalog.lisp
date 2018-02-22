@@ -1,7 +1,6 @@
 
 (ql:quickload :cl-ppcre)
 (ql:quickload :dexador)
-;(ql:quickload :com.gigamonkeys.utilities)
 
 (defvar token-url "https://service.nalog.ru/static/captcha.html")
 (defvar tmp-file "tmp.gif")
@@ -23,6 +22,29 @@
 (defparameter *data* ())
 (defparameter current-token ())
 (defparameter *results* ())
+(defvar days-im-months #(31 29 31 30 31 30 31 31 30 31 30 31))
+
+(defun digit-int (d)
+  (- (char-int d) (char-int #\0)))
+
+(defun check-date (str)
+  (and (= (length str) (+ 2 1 2 1 4))
+       (char= (aref str 2) #\.)
+       (char= (aref str 5) #\.)
+       (every #'digit-char-p (loop for i in '(0 1 3 4 6 7 8 9) collect (aref str i)))
+       (let* ((digits (loop for i in '(0 1 3 4 6 7 8 9) collect (digit-int (aref str i))))
+              (d (+ (* (car digits) 10)
+                    (cadr digits)))
+              (m (+ (* (nth 2 digits) 10)
+                    (nth 3 digits)))
+              (y (+ (* (nth 4 digits) 1000)
+                    (* (nth 5 digits) 100)
+                    (* (nth 6 digits) 10)
+                    (nth 7 digits))))
+         (and (<= m 12)
+              (<= d (aref days-im-months (- m 1)))
+              (<= y 2020)
+              (>= y 1920)))))
 
 (defun js-time-approx ()
   (* 407 (get-universal-time)))
@@ -57,9 +79,9 @@
       ((not (eql inn 'error)) (list inn))
     (handler-case
 	(let* ((captcha-result
-		(progn
-		  (format t "Person: ~A~%Captcha: " p)
-		  (read-captcha cookies)))
+                 (progn
+                   (format t "Person: ~A~%Captcha: " p)
+                   (read-captcha cookies)))
 	       (ans (dex:post *request-url*
 			      :cookie-jar cookies
 			      :content `(("c" . "innMy")
@@ -90,7 +112,9 @@
 	(ppcre:scan-to-strings regex-pattern line)
       (declare (ignore _))
       (setf *data*
-	    (if parsed-data
+	    (if (and parsed-data
+                     (check-date (aref parsed-data 3))
+                     (check-date (aref parsed-data 7)))
 		(nconc *data* (list (make-person :surname (aref parsed-data 0)
 						 :name (aref parsed-data 1)
 						 :patronymic (aref parsed-data 2)
@@ -114,16 +138,16 @@
     (setf current-token (aref token 0)))
 
   (loop for p in *data* do
-       (setf *results*
-	     (nconc *results*
-		    (cond
-		      ((person-p p) (make-request p *cookie-jar*))
-		      (t (list "Недостаточно данных для запроса")))))))
+        (setf *results*
+              (nconc *results*
+                     (cond
+                       ((person-p p) (make-request p *cookie-jar*))
+                       (t (list "Wrong/incomplete data")))))))
 
 (defun show-results ()
   (format t "RESULTS:~%")
   (loop for x in *results* do
-       (format t "~A~%" x)))
+        (format t "~A~%" x)))
 
 (defun main ()
   (do ((command (read-command) (read-command)))
