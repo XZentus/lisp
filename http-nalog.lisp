@@ -27,6 +27,21 @@
 (defparameter regex-pattern
   "(\\w*)\\s+(\\w*)\\s+(\\w*)\\s+(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(\\d{2})\\s*(\\d{2})\\s*(\\d{6})\\s+(\\d{2}\\.\\d{2}\\.\\d{4})")
 
+(defun make-gibdd-url (str)
+  (let ((pattern
+          "(\\d{4})[\\s№]*(\\d{6})[\\sот]*([\\d\\.]{10})"))
+    (multiple-value-bind (_ data)
+        (ppcre:scan-to-strings pattern str)
+      (declare (ignore _))
+      (if data
+          (concatenate 'string
+                       "https://гибдд.рф/check/driver#"
+                       (elt data 0)
+                       (elt data 1)
+                       "+"
+                       (elt data 2))
+          (format t "Cannot parse: ~a~%" str)))))
+
 (defparameter *data* ())
 (defparameter current-token ())
 (defparameter *results* ())
