@@ -38,3 +38,20 @@
                (t
                 (princ 2) (fun1 (calc-step arg))))))
     (fun1 arg)))
+
+(defmacro defun/memo (name args &body body)
+  (let* ((memo (gensym))
+         (get-form (or (and (listp args) (or (eq (car args) '&rest)
+                                             (eq (car args) '&body))
+                            `(gethash (list ,@(cdr args)) ,memo))
+                       `(gethash (list ,@args) ,memo))))
+    `(let ((,memo (make-hash-table :test 'equalp)))
+       (defun ,name ,args
+         (or ,get-form
+             (setf ,get-form (progn ,@body)))))))
+
+
+(defun test-routine (x y)
+  (let ((r (- x y)))
+    (format t "Calculating for x = ~A y = ~A ... ~A~%" x y r)
+    r))
