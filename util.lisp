@@ -1,8 +1,9 @@
-(defmacro deflazy/memo (name args &body body)
+(defmacro deflazy/memo-declare (name args declarations &body body)
   (let ((h (gensym "HASH"))
         (result (gensym "RESULT")))
     `(let ((,h (make-hash-table :test #'equal)))
        (defun ,name (,@args)
+         ,declarations
          (multiple-value-bind
                (val foundp)
              (gethash (list ,@args) ,h)
@@ -14,10 +15,14 @@
                          (setf (gethash (list ,@args) ,h) (lambda () ,result))
                          ,result)))))))))
 
-(defmacro defmemo (name args &body body)
+(defmacro deflazy/memo (name args &body body)
+  `(deflazy/memo-declare ,name ,args () ,@body))
+
+(defmacro defmemo-declare (name args declarations &body body)
   (let ((h (gensym "HASH")))
     `(let ((,h (make-hash-table :test #'equal)))
        (defun ,name (,@args)
+         ,declarations
          (multiple-value-bind
                (val foundp)
              (gethash (list ,@args) ,h)
@@ -26,6 +31,8 @@
                (setf (gethash (list ,@args) ,h)
                      (progn ,@body))))))))
 
+(defmacro defmemo (name args &body body)
+  `(defmemo-declare ,name ,args () ,@body))
 
 (deflazy/memo fib-lazymemo (n)
   (if (<= n 2)
@@ -33,6 +40,7 @@
       (+ (funcall (fib-lazymemo (1- n))) (funcall (fib-lazymemo (- n 2))))))
 
 (defun fib-slow (n)
+  (declare (fixnum n))
   (if (<= n 2)
       1
       (+ (fib-slow (1- n)) (fib-slow (- n 2)))))
