@@ -8,7 +8,7 @@
       (setf declarations (car body)
             body (cdr body)))
     `(let ((,h (make-hash-table :test #'equal)))
-       (defun ,name (,@args)
+       (defun ,name ,args
          ,declarations
          (multiple-value-bind
                (val foundp)
@@ -30,7 +30,7 @@
       (setf declarations (car body)
             body (cdr body)))
     `(let ((,h (make-hash-table :test #'equal)))
-       (defun ,name (,@args)
+       (defun ,name ,args
          ,declarations
          (multiple-value-bind
                (val foundp)
@@ -41,15 +41,7 @@
                      (progn ,@body))))))))
 
 (defmacro deflazy (name args &body body)
-  (let ((declarations ()))
-    (when (and (listp body)
-               (listp (car body))
-               (equal 'declare (caar body)))
-      (setf declarations (car body)
-            body (cdr body)))
-    `(defun ,name (,@args)
-       ,declarations
-       (lambda () ,@body))))
+  `(defun ,name ,args (lambda () ,@body)))
 
 (deflazy/memo fib-lazymemo (n)
   (declare (fixnum n))
@@ -75,7 +67,7 @@
 
 (deflazy fib-lazy (n)
   (declare (fixnum n))
-;  (format t "Evaluating: (fib-memo ~A) ...~%" n)
+  (format t "Evaluating: (fib-memo ~A) ...~%" n)
   (if (<= n 2)
       1
       (+ (funcall (fib-lazy (1- n))) (funcall (fib-lazy (- n 2))))))
