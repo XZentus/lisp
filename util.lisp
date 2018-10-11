@@ -56,9 +56,11 @@
 ;  (format t "Evaluating: (fib-lazymemo ~A) ...~%" n)
   (if (<= n 2)
       1
-      (+ (funcall (fib-lazymemo (1- n))) (funcall (fib-lazymemo (- n 2))))))
+      (+ (the integer (funcall (fib-lazymemo (1- n))))
+         (the integer (funcall (fib-lazymemo (- n 2)))))))
 
 (defun fib-slow (n)
+  (declare (fixnum n))
 ;  (format t "Evaluating: (fib-slow ~A) ...~%" n)
   (if (<= n 2)
       1
