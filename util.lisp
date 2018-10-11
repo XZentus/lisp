@@ -40,29 +40,29 @@
 
 (deflazy/memo fib-lazymemo (n)
   (declare (fixnum n))
-                                        ;  (format t "Evaluating: (fib-lazymemo ~A) ...~%" n)
+;  (format t "Evaluating: (fib-lazymemo ~A) ...~%" n)
   (if (<= n 2)
       1
-      (+ (the integer (funcall (fib-lazymemo (1- n))))
-         (the integer (funcall (fib-lazymemo (- n 2)))))))
+      (+ (funcall (fib-lazymemo (1- n)))
+         (funcall (fib-lazymemo (- n 2))))))
 
 (defun fib-slow (n)
   (declare (fixnum n))
-                                        ;  (format t "Evaluating: (fib-slow ~A) ...~%" n)
+;  (format t "Evaluating: (fib-slow ~A) ...~%" n)
   (if (<= n 2)
       1
       (+ (fib-slow (1- n)) (fib-slow (- n 2)))))
 
 (defmemo fib-memo (n)
   (declare (fixnum n))
-                                        ;  (format t "Evaluating: (fib-memo ~A) ...~%" n)
+;  (format t "Evaluating: (fib-memo ~A) ...~%" n)
   (if (<= n 2)
       1
       (+ (fib-memo (1- n)) (fib-memo (- n 2)))))
 
 (deflazy fib-lazy (n)
   (declare (fixnum n))
-                                        ;  (format t "Evaluating: (fib-memo ~A) ...~%" n)
+;  (format t "Evaluating: (fib-lazy ~A) ...~%" n)
   (if (<= n 2)
       1
       (+ (funcall (fib-lazy (1- n))) (funcall (fib-lazy (- n 2))))))
