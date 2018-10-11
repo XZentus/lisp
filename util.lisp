@@ -7,19 +7,18 @@
                (equal 'declare (caar body)))
       (setf declarations (car body)
             body (cdr body)))
-    `(let ((,h (make-hash-table :test #'equal)))
-       (defun ,name ,args
-         ,declarations
-         (multiple-value-bind
-               (val foundp)
-             (gethash (list ,@args) ,h)
-           (if foundp
-               val
-               (setf (gethash (list ,@args) ,h)
-                     (lambda ()
-                       (let ((,result (progn ,@body)))
-                         (setf (gethash (list ,@args) ,h) (lambda () ,result))
-                         ,result)))))))))
+    (symbol-macrolet ((hash `(gethash (list ,@args) ,h)))
+      `(let ((,h (make-hash-table :test #'equal)))
+         (defun ,name ,args
+           ,declarations
+           (multiple-value-bind (val foundp) ,hash
+             (if foundp
+                 val
+                 (setf ,hash
+                       (lambda ()
+                         (let ((,result (progn ,@body)))
+                           (setf ,hash (lambda () ,result))
+                           ,result))))))))))
 
 (defmacro defmemo (name args &body body)
   (let ((h (gensym "HASH"))
@@ -29,16 +28,14 @@
                (equal 'declare (caar body)))
       (setf declarations (car body)
             body (cdr body)))
-    `(let ((,h (make-hash-table :test #'equal)))
-       (defun ,name ,args
-         ,declarations
-         (multiple-value-bind
-               (val foundp)
-             (gethash (list ,@args) ,h)
-           (if foundp
-               val
-               (setf (gethash (list ,@args) ,h)
-                     (progn ,@body))))))))
+    (symbol-macrolet ((hash `(gethash (list ,@args) ,h)))
+      `(let ((,h (make-hash-table :test #'equal)))
+         (defun ,name ,args
+           ,declarations
+           (multiple-value-bind (val foundp) ,hash
+             (if foundp
+                 val
+                 (setf ,hash (progn ,@body)))))))))
 
 (defmacro deflazy (name args &body body)
   `(defun ,name ,args (lambda () ,@body)))
