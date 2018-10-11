@@ -30,7 +30,7 @@
 (deflazy/memo fib-lazymemo (n)
   (if (<= n 2)
       1
-      (+ (funcall (fib (1- n))) (funcall (fib (- n 2))))))
+      (+ (funcall (fib-lazymemo (1- n))) (funcall (fib-lazymemo (- n 2))))))
 
 (defun fib-slow (n)
   (if (<= n 2)
