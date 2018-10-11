@@ -40,6 +40,17 @@
                (setf (gethash (list ,@args) ,h)
                      (progn ,@body))))))))
 
+(defmacro deflazy (name args &body body)
+  (let ((declarations ()))
+    (when (and (listp body)
+               (listp (car body))
+               (equal 'declare (caar body)))
+      (setf declarations (car body)
+            body (cdr body)))
+    `(defun ,name (,@args)
+       ,declarations
+       (lambda () ,@body))))
+
 (deflazy/memo fib-lazymemo (n)
   (declare (fixnum n))
 ;  (format t "Evaluating: (fib-lazymemo ~A) ...~%" n)
@@ -59,3 +70,10 @@
   (if (<= n 2)
       1
       (+ (fib-memo (1- n)) (fib-memo (- n 2)))))
+
+(deflazy fib-lazy (n)
+  (declare (fixnum n))
+;  (format t "Evaluating: (fib-memo ~A) ...~%" n)
+  (if (<= n 2)
+      1
+      (+ (funcall (fib-lazy (1- n))) (funcall (fib-lazy (- n 2))))))
