@@ -1,3 +1,8 @@
+(defpackage :e49
+  (:use :cl))
+
+(in-package :e49)
+
 (defparameter *limit* 10001)
 
 (defparameter *erast-primes*
