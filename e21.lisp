@@ -31,6 +31,22 @@
                 (t 0)))
             0)))
 
+(defun solve2 (len)
+  (let ((v (make-array (list (1+ len)) :element-type 'fixnum :initial-element 1))
+        (counter 0)
+        (sum 0))
+    (loop for d from 2 to len do
+          (loop for n from (* d 2) to len by d do
+                (incf (aref v n) d)))
+    (loop for i from 2 to len do
+          (let* ((n1 (aref v i))
+                 (n2 (and (< n1 len) (> n1 i) (aref v n1))))
+            (when (eq i n2)
+              (incf counter 2)
+              (incf sum (+ i n1))
+              (format t "~A <-> ~A~%" i n1))))
+    (list sum counter)))
+
 (defun main ()
   (fill-sdivs)
   (dotimes (i (read))
